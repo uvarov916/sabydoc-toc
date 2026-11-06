@@ -423,10 +423,10 @@ svg { display: block; }
     { id: 'black-text', label: 'Черный текст', kind: 'compact', item: 'ink', markers: { free: 'none', pinned: 'none' }, card: [6, 4, 4, 4], dashOn: 'var(--dark-marker)' }
   ].map(v => ({ heads: COMPACT, ...v }));
 
-  /* alignment experiments for the new variants: shifts (px) of the panel header and of the dashes relative to the title baseline */
+  /* The title switch only changes its visibility; all variants keep the same vertical position. */
   const ALIGNS = [
     { id: 'base', label: '«Оглавление» на базовой линии', btn: 0, dash: 0 },
-    { id: 'item', label: 'Первый пункт на базовой линии', btn: -26, dash: 0 }
+    { id: 'item', label: 'Без заголовка', btn: 0, dash: 0 }
   ];
   const state = { v: VARIANTS.find(v => v.id === 'blue-line'), ctx: CONTEXTS[0], width: 'normal', side: CONTEXTS[0].side, mode: 'pinned', open: false, lc: false, active: 0, align: ALIGNS[1], tight: false, bg: 'none', frame: false, sh: 'default', guide: true };
   const box = document.getElementById('docBox');
@@ -623,7 +623,7 @@ BODY['Какую подпись выбрать'] = `<p>Для приема на 
 
   function renderCompact(v, g) {
     const ttlPad = v.item === 'src' ? 11 : (v.markers.free === 'none' ? 8 : 10);
-    const ttl = state.align.id !== 'item' ? `<span class="ttl" style="padding-left:${ttlPad}px${(v.item === 'mono' || v.item === 'ink') && !(v.extra || '').includes('blueline') ? ';color:var(--mono-ink)' : ''}">Оглавление</span>` : '';
+    const ttl = `<span class="ttl"${state.align.id === 'item' ? ' aria-hidden="true"' : ''} style="${state.align.id === 'item' ? 'visibility:hidden;' : ''}padding-left:${ttlPad}px${(v.item === 'mono' || v.item === 'ink') && !(v.extra || '').includes('blueline') ? ';color:var(--mono-ink)' : ''}">Оглавление</span>`;
     // KB, TOC on the right: the pin button sits on the axis of the article commands (8 px closer to the edge) in every state, so it never jumps
     const shift = state.side === 'right' && !state.ctx.static ? 8 : 0;
     const head = (unpin) => `<div class="head right" style="--pin-shift:${shift}px">${ttl}${pinBtn(unpin)}</div>`;
@@ -632,19 +632,17 @@ BODY['Какую подпись выбрать'] = `<p>Для приема на 
       return;
     }
     const [pt, pr, pb, pl] = v.card;
-    // in the viewer there is nothing to pin: without a title the panel has no header, and its first item sits on the title baseline
-    const headless = state.ctx.noPin && !ttl; // nothing to pin and no label: no header at all
-    const top = headless ? '' : v.item === 'src' ? head(false) : `<div class="head right" style="--pin-shift:${shift}px;height:auto;padding:0;margin-bottom:4px">${ttl}${pinBtn(false)}</div>`;
-    const cardTop = headless ? g.titleTop + 37 - 22 : g.cardTop;
+    // Keep the title row even when its label is hidden, including in the viewer.
+    const top = v.item === 'src' ? head(false) : `<div class="head right" style="--pin-shift:${shift}px;height:auto;padding:0;margin-bottom:4px">${ttl}${pinBtn(false)}</div>`;
+    const cardTop = g.cardTop;
     doc.innerHTML = `<div class="zone" id="zone" style="position:absolute;left:${g.zoneX}px;top:${g.zoneTop}px;width:192px">
         <div class="dashes" style="align-items:${g.dashAlign};padding:${g.dashPad}">${dashesHTML(v)}</div></div>
       <div class="card${state.open ? ' open' : ''}" id="card" style="--off:${g.off}px;left:${g.cardX}px;top:${cardTop}px;width:${200 + shift}px;padding:${pt}px ${pr + shift}px ${pb}px ${pl}px">${top}${listHTML(v)}</div>`;
     bindHover();
-    if (state.ctx.static || headless) alignCardToBaseline(g, cardTop);
+    if (state.ctx.static) alignCardToBaseline(g, cardTop);
   }
 
-  /* viewer: the panel sits on the baseline of the document title. The «ОГЛАВЛЕНИЕ» label is aligned to it,
-     and when there is no label (the «Первый пункт на базовой линии» mode) the first item is. Measured on the real glyph lines. */
+  /* Align the visible or reserved title row to the document title baseline. */
   function alignCardToBaseline(g, cardTop) {
     const card = document.getElementById('card');
     const target = card.querySelector('.ttl') || card.querySelector('.ci .tx .r');
