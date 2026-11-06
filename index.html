@@ -602,6 +602,7 @@ BODY['Какую подпись выбрать'] = `<p>Для приема на 
     artIn.style.paddingRight = g.textR + 'px';
     guide.hidden = true; // the red baseline line was a review aid; its toggle is removed
     guide.style.top = (g.titleTop + (c.static ? 37 : 36)) + 'px'; // viewer: the real glyph baseline of the 36 px title
+    alignDashesToParagraph();
     syncBreaks();
     renderRadios();
   }
@@ -655,6 +656,21 @@ BODY['Какую подпись выбрать'] = `<p>Для приема на 
     const baseline = (rect.top - bx.top) / sc + (rect.height / sc) * (0.96875 / 1.2102); // Inter: ascent / content height
     const titleBase = g.titleTop + (state.ctx.static ? 37 : 36);
     card.style.top = (cardTop + (titleBase - baseline)) + 'px';
+  }
+
+  // Align the collapsed TOC with the first paragraph in every document layout.
+  function alignDashesToParagraph() {
+    const zone = doc.querySelector('.zone');
+    const dash = zone?.querySelector('.dash');
+    const paragraph = art.querySelector('p');
+    if (!dash || !paragraph) return;
+    const range = document.createRange();
+    range.selectNodeContents(paragraph);
+    const firstLine = range.getClientRects()[0];
+    if (!firstLine) return;
+    const scale = box.getBoundingClientRect().width / state.ctx.box.w;
+    const offset = (firstLine.top - dash.getBoundingClientRect().top) / scale + art.scrollTop;
+    zone.style.top = (parseFloat(zone.style.top) + offset) + 'px';
   }
 
   function bindHover() {
