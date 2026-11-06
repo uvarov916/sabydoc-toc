@@ -31,7 +31,7 @@
   --shadow-d: 0 0 6px rgba(0, 0, 0, 0.1); /* Figma effect style shadow_d */
   --shadow-sliding: 0 0 5px rgba(0, 0, 0, 0.2); /* library: box-shadow_slidingPanel (Default Light theme) */
   --shadow-saby: 0 0 46px 0 rgba(0, 0, 0, 0.12), 0 0 15px 0 rgba(0, 0, 0, 0.12); /* live Saby document TOC */
-  --bg-grey: #f8f8f8;   /* library: Background/unaccented_background-color */
+  --bg-grey: #f7f7f7;   /* grey background sampled from the reference screenshot */
   --bg-violet: #f8f7ff; /* library: Background/info_background-color */
   --bg-blue: #f5faff;   /* library: Background/secondary_background-color */
   --shadow-b: 0 0 8px rgba(0, 0, 0, 0.14); /* Figma effect style shadow_b (Default Light theme) */
@@ -743,12 +743,12 @@ BODY['Какую подпись выбрать'] = `<p>Для приема на 
     const blue = VARIANTS.find(v => v.id === 'blue-line');
     radios.innerHTML = radio(isBlue, blue.label, 'data-v="blue-line"');
     lookCard.classList.toggle('idle', !isBlue);
-    // three looks in a column: white / blue background (with the frame) / blue frame on white
-    const look = bgOn ? 'blue' : state.frame === 'thin' ? 'thin' : state.frame ? 'frame' : 'white';
+    // four looks in a column: white / grey / blue background (with the frame) / blue frame on white
+    const look = bgOn ? state.bg : state.frame === 'thin' ? 'thin' : state.frame ? 'frame' : 'white';
     // sub-items of «Цветная линия» on the same card, 20 px from the left
     // the hover looks belong to «Цветная линия» only: with any other variant they are disabled
     const ld = ''; // always clickable: picking one switches to «Цветная линия»; with another variant none of them is checked
-    radios.innerHTML += `<div class="lksub"><div class="cap lkcap">По ховеру</div>` + radio(isBlue && look === 'white', 'Белый фон', 'data-look="white"' + ld) + radio(isBlue && look === 'blue', 'Голубой фон', 'data-look="blue"' + ld) + radio(isBlue && look === 'frame', 'Голубая обводка без фона', 'data-look="frame"' + ld) + `</div>`;
+    radios.innerHTML += `<div class="lksub"><div class="cap lkcap">По ховеру</div>` + radio(isBlue && look === 'white', 'Белый фон', 'data-look="white"' + ld) + radio(isBlue && look === 'grey', 'Серый фон', 'data-look="grey"' + ld) + radio(isBlue && look === 'blue', 'Голубой фон', 'data-look="blue"' + ld) + radio(isBlue && look === 'frame', 'Голубая обводка без фона', 'data-look="frame"' + ld) + `</div>`;
     lookCard.hidden = true;
     // shadow: a double switch on its own card; only the white background takes a shadow
     const br = state.sh === 'bright';
@@ -845,7 +845,7 @@ BODY['Какую подпись выбрать'] = `<p>Для приема на 
     if (!t || t.disabled || t.dataset.v) return; // «Цветная линия» itself is handled by the variant radios
     const wasBlue = state.v.id === 'blue-line';
     if (!wasBlue) reset({ v: VARIANTS.find(x => x.id === 'blue-line') }); // a hover look belongs to «Цветная линия»
-    if (t && t.dataset.look) { const l = t.dataset.look; state.bg = l === 'blue' ? 'blue' : 'none'; state.frame = l === 'thin' ? 'thin' : l !== 'white'; }
+    if (t && t.dataset.look) { const l = t.dataset.look; state.bg = ['blue', 'grey'].includes(l) ? l : 'none'; state.frame = l === 'thin' ? 'thin' : ['blue', 'frame'].includes(l); }
     else return;
     state.mode = 'free'; state.open = false; // the hover looks are seen on the unpinned TOC
     render();
